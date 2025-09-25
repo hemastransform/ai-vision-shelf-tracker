@@ -36,12 +36,11 @@ form.addEventListener('submit', async function(event) {
     submitButton.disabled = true;
     statusDiv.textContent = 'Preparing upload...';
 
-    // 1. Get the secure upload URL from our backend, now including new fields
     const metadata = {
         sales_id: form.sales_id.value,
-        outlet_name: form.outlet_name.value, // NEW
-        city: form.city.value,             // NEW
-        address: form.address.value,           // NEW
+        outlet_name: form.outlet_name.value,
+        city: form.city.value,
+        address: form.address.value,
         territory: form.territory.value,
         location_gps: locationInput.value,
         filename: file.name
@@ -62,7 +61,6 @@ form.addEventListener('submit', async function(event) {
     const { upload_url, image_id } = await response.json();
     statusDiv.textContent = `Uploading image (${image_id})...`;
 
-    // 2. Upload the file directly to Azure Blob Storage
     const uploadResponse = await fetch(upload_url, {
         method: 'PUT',
         body: file,
