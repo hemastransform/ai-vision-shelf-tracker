@@ -7,6 +7,7 @@ from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPerm
 from azure.data.tables import TableServiceClient, TableEntity
 
 # --- AZURE CONFIGURATION ---
+# These must be set as Application Settings in your Static Web App
 AZURE_STORAGE_CONNECTION_STRING = os.environ.get("AzureWebJobsStorage")
 BLOB_CONTAINER_NAME = "raw-images"
 TABLE_NAME = "ImageMetadata"
@@ -25,21 +26,21 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             blob_name=filename,
             account_key=blob_service_client.credential.account_key,
             permission=BlobSasPermissions(write=True),
-            expiry=datetime.utcnow() + timedelta(minutes=5)
+            expiry=datetime.utcnow() + timedelta(minutes=5) # URL is valid for 5 minutes
         )
         upload_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{filename}?{sas_token}"
         
-        # --- 2. Save Metadata (including new fields) to Azure Table Storage ---
+        # --- 2. Save Metadata to Azure Table Storage ---
         table_service_client = TableServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
         table_client = table_service_client.get_table_client(table_name=TABLE_NAME)
         table_client.create_table_if_not_exists()
         
         entity = TableEntity(
-            PartitionKey=data['city'], # Using City as the PartitionKey for good data distribution
+            PartitionKey=data['city'],
             RowKey=image_id,
             SalesID=data['sales_id'],
-            OutletName=data['outlet_name'], # NEW
-            Address=data['address'],           # NEW
+            OutletName=data['outlet_name'],
+            Address=data['address'],
             Territory=data['territory'],
             LocationGPS=data['location_gps'],
             BlobFilename=filename,
